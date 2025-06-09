@@ -38,6 +38,7 @@ const SCHEMA = {
         type: { const: "server-side-website" },
         apiGateway: { enum: ["http", "rest"] },
         originName: { type: "string" },
+        responseTimeout: { type: "integer", minimum: 1, maximum: 180 },
         assets: {
             type: "object",
             additionalProperties: { type: "string" },
@@ -130,6 +131,11 @@ export class ServerSideWebsite extends AwsConstruct {
                 origin: new HttpOrigin(this.getCloudFrontOrigin(), {
                     // API Gateway only supports HTTPS
                     protocolPolicy: OriginProtocolPolicy.HTTPS_ONLY,
+                    // Configure response timeout if provided
+                    ...(configuration.responseTimeout != null &&
+                        configuration.responseTimeout > 0 && {
+                            readTimeout: Duration.seconds(configuration.responseTimeout),
+                        }),
                 }),
                 // For a backend app we all all methods
                 allowedMethods: AllowedMethods.ALLOW_ALL,
